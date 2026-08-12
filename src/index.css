@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand: #8b2fe0;
+    --header-height: 64px;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white font-sans text-ink antialiased;
+  }
+
+  /* Some o scrollbar dos carrosséis sem perder o scroll por toque */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Respeita quem pediu menos movimento — o GSAP também checa isso */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .page {
+    @apply mx-auto w-full max-w-page px-4 sm:px-6 lg:px-10;
+  }
+
+  .btn-brand {
+    @apply inline-flex items-center justify-center gap-2 rounded-btn bg-brand px-6 py-3
+           text-[14px] font-semibold uppercase tracking-wide text-white
+           transition-all duration-200 hover:bg-brand-600 active:scale-[0.98]
+           disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-btn border border-ink/20
+           bg-white px-6 py-3 text-[13px] font-semibold uppercase tracking-wide text-ink
+           transition-colors hover:border-ink hover:bg-ink hover:text-white;
+  }
+
+  .section-title {
+    @apply text-center text-[26px] font-bold leading-tight text-ink sm:text-[30px];
+  }
+
+  .section-sub {
+    @apply mt-1 text-center text-[14px] text-neutral-500;
+  }
+
+  .title-rule {
+    @apply mx-auto mt-3 h-[3px] w-[130px] rounded-full bg-brand;
+  }
+
+  .field {
+    @apply w-full rounded-md border border-neutral-300 bg-white px-3 py-3 text-[14px]
+           text-ink outline-none transition-colors
+           placeholder:text-neutral-400 focus:border-brand focus:ring-1 focus:ring-brand;
+  }
+
+  .size-pill {
+    @apply flex h-9 min-w-[44px] items-center justify-center rounded-md border px-3
+           text-[13px] font-medium transition-all duration-150;
+  }
+
+  .prose-desc h2 {
+    @apply mb-2 mt-6 text-[17px] font-bold text-ink;
+  }
+  .prose-desc p {
+    @apply mb-3 text-[14px] leading-relaxed text-neutral-600;
+  }
+  .prose-desc ul {
+    @apply mb-4 space-y-1 pl-5;
+  }
+  .prose-desc li {
+    @apply list-disc text-[14px] leading-relaxed text-neutral-600;
+  }
+  .prose-desc strong {
+    @apply font-semibold text-ink;
+  }
+}
+
+/* Estado inicial dos elementos animados por GSAP.
+   A classe é removida assim que a animação registra, então quem tem JS
+   desligado continua vendo tudo. */
+.gsap-init {
+  opacity: 0;
+}
+html.no-js .gsap-init {
+  opacity: 1;
+}
