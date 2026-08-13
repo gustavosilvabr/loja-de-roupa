@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAdmin } from '../store/AdminProvider';
 import { useSincronizador } from '../store/useSincronizador';
 import { RESUMO_TIPO } from '../store/sync';
@@ -137,7 +138,7 @@ export default function Sincronizacao() {
             checked={settings.sync.importarNovos}
             onChange={(v) => setSync({ importarNovos: v })}
             label="Importar produtos novos automaticamente"
-            hint="Entram sem descrição e sem variantes — revise antes de publicar"
+            hint="Entram completos — tamanhos, fotos e descrição — mas revise antes de divulgar"
           />
         </div>
 
@@ -145,6 +146,14 @@ export default function Sincronizacao() {
           Última verificação: <strong className="text-slate-700">{quando(sync.ultimaVerificacao)}</strong>
           . O preço de venda se recalcula sozinho quando o custo muda, então sua margem não é comida
           sem você perceber.
+        </p>
+        <p className="mt-2 text-[12.5px] text-slate-500">
+          O que o olheiro encontra vai direto para o Supabase, então aparece para todo mundo — não só
+          neste computador. Isso exige estar logado no painel:{' '}
+          <Link to="/admin/config/nuvem" className="font-medium text-slate-700 underline">
+            ver o catálogo na nuvem
+          </Link>
+          .
         </p>
       </Card>
 

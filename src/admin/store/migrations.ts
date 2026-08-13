@@ -7,7 +7,7 @@ import type { StoreSettings } from '../types';
  * sido gravado no navegador do lojista, incremente aqui e adicione o passo
  * correspondente em MIGRACOES — assim a correção chega sem apagar o resto.
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 const KEY = 'schemaVersion';
 
@@ -26,7 +26,41 @@ const MIGRACOES: Record<number, Migracao> = {
   // v3 — a loja foi renomeada de Xing Sun para GP ESPORTES. Quem já tinha
   // configurações salvas continuava vendo o nome antigo no título e no rodapé.
   3: (s) => trocarNome(s) as StoreSettings,
+  // v4 — os banners e o menu apontavam para agrupamentos do fornecedor
+  // ("produtos mais vendidos"), onde time europeu, brasileiro e seleção vinham
+  // misturados. Agora existem coleções próprias; quem já tinha configuração
+  // salva continuava caindo na lista bagunçada.
+  4: corrigirLinks,
 };
+
+/** Destinos antigos que nunca deveriam ter sido usados nestes lugares. */
+const LINKS_ERRADOS = new Set([
+  '/colecoes/produtos-mais-vendidos',
+  '/colecoes/real-madrid',
+  '/colecoes/barcelona',
+  '/colecoes/manchester-city',
+  '/colecoes/nacional-premium',
+]);
+
+function corrigirLinks(s: StoreSettings): StoreSettings {
+  /**
+   * Só mexe no que está comprovadamente errado: mesma posição (id) e destino
+   * na lista acima. Um link que o lojista trocou de propósito fica como está.
+   */
+  const realinhar = <T extends { id: string; to: string }>(itens: T[], padrao: T[]): T[] =>
+    itens.map((item) => {
+      if (!LINKS_ERRADOS.has(item.to)) return item;
+      const certo = padrao.find((p) => p.id === item.id);
+      return certo && certo.to !== item.to ? { ...item, to: certo.to } : item;
+    });
+
+  return {
+    ...s,
+    nav: realinhar(s.nav, DEFAULT_SETTINGS.nav),
+    featureBanners: realinhar(s.featureBanners, DEFAULT_SETTINGS.featureBanners),
+    collectionBanners: realinhar(s.collectionBanners, DEFAULT_SETTINGS.collectionBanners),
+  };
+}
 
 /** Troca o nome antigo por GP ESPORTES em qualquer texto das configurações. */
 function trocarNome(valor: unknown): unknown {

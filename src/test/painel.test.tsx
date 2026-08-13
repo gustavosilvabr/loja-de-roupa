@@ -21,6 +21,7 @@ import Seo from '../admin/pages/config/Seo';
 import Pixels from '../admin/pages/config/Pixels';
 import Politicas from '../admin/pages/config/Politicas';
 import Dados from '../admin/pages/config/Dados';
+import CatalogoNuvem from '../admin/pages/config/CatalogoNuvem';
 import Ajuda from '../admin/pages/Ajuda';
 import Precos from '../admin/pages/Precos';
 import Sincronizacao from '../admin/pages/Sincronizacao';
@@ -46,6 +47,7 @@ describe('todas as telas montam sem quebrar', () => {
     ['Pixels', () => renderSimples(<Pixels />)],
     ['Políticas', () => renderSimples(<Politicas />)],
     ['Dados', () => renderSimples(<Dados />)],
+    ['Catálogo na nuvem', () => renderSimples(<CatalogoNuvem />)],
     ['Ajuda', () => renderSimples(<Ajuda />)],
     ['Preços e lucro', () => renderSimples(<Precos />)],
     ['Olheiro', () => renderSimples(<Sincronizacao />)],
@@ -211,6 +213,16 @@ describe('telas de estatística sem dados', () => {
   it('Visão geral monta com zero eventos', () => {
     const { container } = renderSimples(<VisaoGeral />);
     expect(within(container).getByRole('heading', { level: 1 })).toBeInTheDocument();
+  });
+});
+
+describe('Catálogo na nuvem', () => {
+  it('sem chaves do Supabase, explica em vez de mostrar botão que não funciona', () => {
+    // O .env.test deixa as variáveis em branco de propósito: nenhum teste
+    // pode encostar no banco de verdade.
+    renderSimples(<CatalogoNuvem />);
+    expect(screen.getByText(/nuvem desligada/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /enviar/i })).not.toBeInTheDocument();
   });
 });
 

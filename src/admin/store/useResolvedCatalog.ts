@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
-import { products as baseProducts } from '../../data/products';
-import { collections as baseCollections } from '../../data/collections';
+import { useMemo, useSyncExternalStore } from 'react';
+import { assinarBase, catalogoBase } from './baseCatalog';
 import { aplicarMarkup } from '../../lib/precos';
 import { DEFAULT_SETTINGS } from '../defaults';
 import { useAdmin } from './AdminProvider';
@@ -40,16 +39,22 @@ export function precoDeVenda(
 
 export function resolveProducts(
   overrides: CatalogOverrides,
-  pricing: PricingSettings
+  pricing: PricingSettings,
+  base: Product[] = catalogoBase().products
 ): Product[] {
   const deleted = new Set(overrides.deleted);
 
-  const merged = baseProducts
+  const merged = base
     .filter((p) => !deleted.has(p.handle))
     .map((p) => applyPatch(p, overrides, pricing));
 
+  // Um produto trazido pelo olheiro fica em `created` até subir para a nuvem.
+  // Quando ele passa a existir na base, o esboço local sai de cena — senão o
+  // mesmo produto apareceria duas vezes na vitrine.
+  const naBase = new Set(base.map((p) => p.handle));
+
   const created = overrides.created
-    .filter((h) => !deleted.has(h))
+    .filter((h) => !deleted.has(h) && !naBase.has(h))
     .map((handle) => criarProduto(handle, overrides, pricing));
 
   return [...created, ...merged].filter((p) => !overrides.products[p.handle]?.hidden);
@@ -148,12 +153,13 @@ function applyPatch(
 
 export function resolveCollections(
   overrides: CatalogOverrides,
-  products: Product[]
+  products: Product[],
+  base: Collection[] = catalogoBase().collections
 ): Collection[] {
   const alive = new Set(products.map((p) => p.handle));
   const deleted = new Set(overrides.categoriesDeleted);
 
-  const merged = baseCollections
+  const merged = base
     .filter((c) => !deleted.has(c.handle))
     .map((c) => {
       const patch = overrides.categories[c.handle];
@@ -187,14 +193,17 @@ export function useCatalog() {
   const { catalog, settings } = useAdmin();
   const pricing = settings.pricing ?? DEFAULT_SETTINGS.pricing;
 
+  // Redesenha sozinho quando o catálogo da nuvem chega e substitui o do bundle.
+  const base = useSyncExternalStore(assinarBase, catalogoBase, catalogoBase);
+
   return useMemo(() => {
-    const products = resolveProducts(catalog, pricing);
-    const collections = resolveCollections(catalog, products);
+    const products = resolveProducts(catalog, pricing, base.products);
+    const collections = resolveCollections(catalog, products, base.collections);
     return {
       products,
       collections,
       productByHandle: new Map(products.map((p) => [p.handle, p])),
       collectionByHandle: new Map(collections.map((c) => [c.handle, c])),
     };
-  }, [catalog, pricing]);
+  }, [catalog, pricing, base]);
 }

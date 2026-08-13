@@ -47,6 +47,7 @@ const GROUPS: NavGroup[] = [
       { to: '/admin/config/seo', label: 'SEO' },
       { to: '/admin/config/pixels', label: 'Pixels e integrações' },
       { to: '/admin/config/politicas', label: 'Políticas' },
+      { to: '/admin/config/nuvem', label: 'Catálogo na nuvem' },
       { to: '/admin/config/dados', label: 'Dados e backup' },
     ],
   },

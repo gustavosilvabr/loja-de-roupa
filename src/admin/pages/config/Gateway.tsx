@@ -38,7 +38,7 @@ const isHttpsUrl = (v: string) => {
 };
 
 export default function Gateway() {
-  const { settings, updateSettings } = useAdmin();
+  const { settings, updateSettings, nuvem } = useAdmin();
   const gw = settings.gateway;
 
   const setGw = (patch: Partial<GatewaySettings>) =>
@@ -57,6 +57,22 @@ export default function Gateway() {
       />
 
       <div className="grid gap-5">
+        {nuvem.ativa && (
+          <p className="rounded-lg bg-slate-100 px-4 py-3 text-[13px] text-slate-700">
+            {nuvem.email ? (
+              <>
+                Cada alteração desta tela é gravada no Supabase automaticamente — não existe botão
+                de salvar. O selo <strong>No ar</strong>, lá no topo, confirma que já subiu.
+              </>
+            ) : (
+              <>
+                Você não está logado, então as alterações ficam só neste navegador.{' '}
+                <strong>Entre no painel</strong> para que elas sejam gravadas no Supabase.
+              </>
+            )}
+          </p>
+        )}
+
         <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-[13px] leading-relaxed text-red-900">
           <p className="text-[14px] font-semibold">A chave secreta nunca entra aqui</p>
           <p className="mt-1">

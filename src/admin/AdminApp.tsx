@@ -29,6 +29,7 @@ import Seo from './pages/config/Seo';
 import Pixels from './pages/config/Pixels';
 import Politicas from './pages/config/Politicas';
 import Dados from './pages/config/Dados';
+import CatalogoNuvem from './pages/config/CatalogoNuvem';
 
 /** Sub-aplicação do painel, carregada sob demanda em /admin. */
 export default function AdminApp() {
@@ -89,6 +90,7 @@ export default function AdminApp() {
         <Route path="config/pixels" element={<Pixels />} />
         <Route path="config/politicas" element={<Politicas />} />
         <Route path="config/dados" element={<Dados />} />
+        <Route path="config/nuvem" element={<CatalogoNuvem />} />
       </Route>
     </Routes>
   );

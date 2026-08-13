@@ -26,7 +26,10 @@ import {
   registrarVisita,
   salvarCatalogo,
   salvarConfig,
+  carregarProdutos,
+  carregarCategorias,
 } from './nuvem';
+import { definirBase } from './baseCatalog';
 import { nuvemAtiva } from '../../lib/supabase';
 import { estaNoEditor } from '../../editor/protocolo';
 import { useRascunhoDoEditor } from '../../lib/modoEditor';
@@ -196,6 +199,26 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => aoMudarSessao(setEmail), []);
+
+  /* ---- 2a. catálogo da nuvem: produtos e preços que todo cliente vê ---- */
+  useEffect(() => {
+    if (!nuvemAtiva) return;
+    let vivo = true;
+
+    // Sem await bloqueante: a tela já está pintada com o catálogo do bundle,
+    // e a nuvem só troca a base quando (e se) responder com produtos.
+    Promise.all([carregarProdutos(), carregarCategorias()])
+      .then(([prods, cats]) => {
+        if (vivo) definirBase(prods, cats);
+      })
+      .catch(() => {
+        /* segue com o catálogo do bundle */
+      });
+
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   /* ---- 2b. dados de venda: só o lojista logado consegue ler ---- */
   useEffect(() => {

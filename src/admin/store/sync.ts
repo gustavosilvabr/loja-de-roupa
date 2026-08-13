@@ -1,4 +1,6 @@
-import { products as baseProducts } from '../../data/products';
+import { catalogoBase } from './baseCatalog';
+import { atualizarCustoNaNuvem, salvarProduto } from './nuvem';
+import type { Product, Variant } from '../../types';
 import type { CatalogOverrides, MudancaSync, SyncSettings } from '../types';
 
 /* ============================================================
@@ -9,7 +11,12 @@ import type { CatalogOverrides, MudancaSync, SyncSettings } from '../types';
    ============================================================ */
 
 interface VarianteOrigem {
+  id?: number | string;
+  title?: string;
+  option1?: string | null;
+  option2?: string | null;
   price: string;
+  compare_at_price?: string | null;
   available: boolean;
 }
 
@@ -17,8 +24,54 @@ interface ProdutoOrigem {
   handle: string;
   title: string;
   product_type: string;
+  vendor?: string;
+  tags?: string[];
+  body_html?: string;
+  options?: { name: string; values: string[] }[];
   variants: VarianteOrigem[];
   images: { src: string }[];
+}
+
+const numero = (v: string | null | undefined): number | null => {
+  const n = parseFloat(v ?? '');
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+/**
+ * Monta o produto completo a partir do JSON da origem.
+ * Assim como em `data/products.ts`, `price` aqui é o CUSTO do fornecedor —
+ * o preço de venda é calculado depois, com o markup da loja.
+ */
+function montarProduto(p: ProdutoOrigem): Product {
+  const imagens = (p.images ?? []).map((i) => i.src).filter(Boolean);
+
+  const variants: Variant[] = (p.variants ?? []).map((v, i) => ({
+    id: String(v.id ?? `${p.handle}-v${i + 1}`),
+    title: v.title ?? 'Padrão',
+    o1: v.option1 ?? null,
+    o2: v.option2 ?? null,
+    price: numero(v.price) ?? 0,
+    compareAt: numero(v.compare_at_price),
+    available: Boolean(v.available),
+  }));
+
+  return {
+    id: p.handle,
+    handle: p.handle,
+    title: p.title,
+    type: p.product_type || 'Camisa',
+    vendor: p.vendor ?? '',
+    tags: p.tags ?? [],
+    options: p.options ?? [],
+    variants,
+    images: imagens,
+    image: imagens[0] ?? '',
+    price: custoDe(p),
+    custo: custoDe(p),
+    compareAt: variants.find((v) => v.compareAt)?.compareAt ?? null,
+    available: variants.some((v) => v.available),
+    descriptionHtml: p.body_html ?? '',
+  };
 }
 
 const PAGINAS_MAX = 6;
@@ -70,6 +123,9 @@ export function compararCatalogos(
   const mudancas: MudancaSync[] = [];
   const excluidos = new Set(overrides.deleted);
 
+  // Compara contra o catálogo que está no ar (nuvem, se houver), não contra
+  // o do bundle — senão todo produto já importado voltaria como "novo".
+  const baseProducts = catalogoBase().products;
   const locais = new Map(baseProducts.map((p) => [p.handle, p]));
   const naOrigem = new Set<string>();
 
@@ -89,6 +145,7 @@ export function compararCatalogos(
         imagem: p.images?.[0]?.src ?? '',
         tipo: 'novo',
         custoNovo,
+        produto: montarProduto(p),
       });
       continue;
     }
@@ -181,6 +238,51 @@ export function aplicarMudancas(
   }
 
   return { ...overrides, products: produtos, created: criados };
+}
+
+export interface ResultadoNuvem {
+  novos: number;
+  atualizados: number;
+  falhas: number;
+}
+
+/**
+ * Leva as mudanças do olheiro para o Supabase, que é o que todo cliente lê.
+ * Sem isso a atualização ficaria só no navegador de quem rodou a checagem.
+ *
+ * Nunca lança: se a nuvem estiver fora do ar, conta a falha e segue — o
+ * catálogo local já foi atualizado por `aplicarMudancas`.
+ */
+export async function enviarMudancasParaNuvem(
+  mudancas: MudancaSync[],
+  opcoes: { importarNovos: boolean }
+): Promise<ResultadoNuvem> {
+  const r: ResultadoNuvem = { novos: 0, atualizados: 0, falhas: 0 };
+
+  for (const m of mudancas) {
+    try {
+      if (m.tipo === 'novo') {
+        if (!opcoes.importarNovos || !m.produto) continue;
+        if (await salvarProduto(m.produto)) r.novos++;
+        else r.falhas++;
+        continue;
+      }
+
+      const campos =
+        m.tipo === 'preco'
+          ? { custo: m.custoNovo }
+          : m.tipo === 'estoque'
+            ? { disponivel: m.disponivelAgora }
+            : { disponivel: false }; // 'sumiu': esconde, não apaga
+
+      if (await atualizarCustoNaNuvem(m.handle, campos)) r.atualizados++;
+      else r.falhas++;
+    } catch {
+      r.falhas++;
+    }
+  }
+
+  return r;
 }
 
 /** Registra os custos vistos, para não repetir o mesmo aviso. */

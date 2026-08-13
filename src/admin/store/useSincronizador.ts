@@ -4,9 +4,12 @@ import {
   aplicarMudancas,
   buscarOrigem,
   compararCatalogos,
+  enviarMudancasParaNuvem,
   precisaVerificar,
   registrarCustos,
 } from './sync';
+import { carregarProdutos } from './nuvem';
+import { definirBase } from './baseCatalog';
 import type { MudancaSync } from '../types';
 
 /**
@@ -15,8 +18,30 @@ import type { MudancaSync } from '../types';
  * nada com a aba fechada.
  */
 export function useSincronizador() {
-  const { settings, sync, setSync, catalog, setCatalog } = useAdmin();
+  const { settings, sync, setSync, catalog, setCatalog, nuvem } = useAdmin();
   const emAndamento = useRef(false);
+
+  /**
+   * Sobe as mudanças para o Supabase e recarrega a base.
+   * Só quem está logado tem permissão de gravar; sem sessão, a atualização
+   * fica valendo apenas neste navegador.
+   */
+  const publicar = useCallback(
+    async (escolhidas: MudancaSync[], importarNovos: boolean) => {
+      if (!nuvem.ativa || !nuvem.email || escolhidas.length === 0) return;
+
+      const r = await enviarMudancasParaNuvem(escolhidas, { importarNovos });
+      if (r.novos + r.atualizados > 0) definirBase(await carregarProdutos(), null);
+
+      if (r.falhas > 0) {
+        setSync((s) => ({
+          ...s,
+          ultimoErro: `${r.falhas} alteração(ões) não subiram para a nuvem. Elas valem só neste navegador até a próxima checagem.`,
+        }));
+      }
+    },
+    [nuvem.ativa, nuvem.email, setSync]
+  );
 
   const verificar = useCallback(async () => {
     if (emAndamento.current) return;
@@ -31,6 +56,7 @@ export function useSincronizador() {
         setCatalog((c) =>
           aplicarMudancas(c, mudancas, { importarNovos: settings.sync.importarNovos })
         );
+        await publicar(mudancas, settings.sync.importarNovos);
         setSync((s) => ({
           ...s,
           verificando: false,
@@ -60,7 +86,7 @@ export function useSincronizador() {
     } finally {
       emAndamento.current = false;
     }
-  }, [settings.sync, catalog, sync.custosConhecidos, setSync, setCatalog]);
+  }, [settings.sync, catalog, sync.custosConhecidos, setSync, setCatalog, publicar]);
 
   /** Aplica as mudanças escolhidas e tira da lista de pendências. */
   const aplicar = useCallback(
@@ -68,6 +94,7 @@ export function useSincronizador() {
       setCatalog((c) =>
         aplicarMudancas(c, escolhidas, { importarNovos: true })
       );
+      void publicar(escolhidas, true);
       setSync((s) => ({
         ...s,
         mudancas: s.mudancas.filter(
@@ -76,7 +103,7 @@ export function useSincronizador() {
         custosConhecidos: registrarCustos(s.custosConhecidos, escolhidas),
       }));
     },
-    [setCatalog, setSync]
+    [setCatalog, setSync, publicar]
   );
 
   /** Ignora as pendências sem aplicar, mas lembra dos custos para não reavisar. */

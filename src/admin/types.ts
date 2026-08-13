@@ -206,6 +206,11 @@ export interface MudancaSync {
   custoNovo?: number;
   disponivelAntes?: boolean;
   disponivelAgora?: boolean;
+  /**
+   * Só em 'novo': o produto inteiro montado a partir da origem. É o que vai
+   * para o Supabase — sem ele o produto novo entraria na loja sem tamanhos.
+   */
+  produto?: import('../types').Product;
 }
 
 export interface SyncSettings {

@@ -1,5 +1,6 @@
 import { supabase, URL_PUBLICA_IMAGENS } from '../../lib/supabase';
 import type { AbandonedCart, CatalogOverrides, Order, StoreSettings, VisitorSession } from '../types';
+import type { Collection, Product } from '../../types';
 
 /* ============================================================
    Ponte com o Supabase.
@@ -348,5 +349,210 @@ export async function apagarImagemNuvem(url: string): Promise<boolean> {
 
 export const ehImagemDaNuvem = (url: string) =>
   Boolean(URL_PUBLICA_IMAGENS) && url.startsWith(URL_PUBLICA_IMAGENS);
+
+/** Hash curto e estável da URL — mesma origem, mesmo arquivo no Storage. */
+function assinatura(texto: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < texto.length; i++) {
+    h ^= texto.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
+/**
+ * Copia uma imagem hospedada fora (CDN do fornecedor) para o Storage.
+ * O caminho vem do hash da URL de origem, então rodar duas vezes reaproveita
+ * o mesmo arquivo em vez de encher o bucket de cópias.
+ *
+ * Devolve null quando não dá para copiar — aí a URL antiga continua valendo
+ * e nenhuma foto some da loja.
+ */
+export async function espelharImagem(url: string): Promise<string | null> {
+  if (!supabase || !url || url.startsWith('local:')) return null;
+  if (ehImagemDaNuvem(url)) return url;
+
+  const extensao = (url.split('?')[0].split('.').pop() ?? 'jpg').toLowerCase().slice(0, 5);
+  const caminho = `catalogo/${assinatura(url)}.${extensao}`;
+  const publica = `${URL_PUBLICA_IMAGENS}${caminho}`;
+
+  // Se já foi espelhada antes, não baixa de novo.
+  const { data: existente } = await supabase.storage
+    .from('imagens')
+    .list('catalogo', { search: `${assinatura(url)}.` });
+  if (existente?.length) return publica;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+
+    const blob = await res.blob();
+    // Sem upsert de propósito: o Storage só tem política de INSERT, não de
+    // UPDATE. Se o arquivo já existir, o conflito é a resposta certa — o
+    // conteúdo é o mesmo, já que o caminho vem do hash da própria URL.
+    const { error } = await supabase.storage.from('imagens').upload(caminho, blob, {
+      contentType: blob.type || 'image/jpeg',
+      cacheControl: '31536000',
+      upsert: false,
+    });
+
+    if (!error) return publica;
+    return /exists|duplicate|409/i.test(error.message) ? publica : null;
+  } catch {
+    // CORS, rede fora, arquivo removido da origem — nada disso pode parar a loja.
+    return null;
+  }
+}
+
+/* ---------- catálogo ---------- */
+
+interface LinhaProduto {
+  handle: string;
+  titulo: string;
+  tipo: string;
+  fornecedor: string | null;
+  tags: string[];
+  opcoes: Product['options'];
+  variantes: Product['variants'];
+  imagens: string[];
+  descricao_html: string;
+  custo: number;
+  disponivel: boolean;
+}
+
+const paraProduto = (l: LinhaProduto): Product => ({
+  id: l.handle,
+  handle: l.handle,
+  title: l.titulo,
+  type: l.tipo,
+  vendor: l.fornecedor ?? '',
+  tags: l.tags ?? [],
+  options: l.opcoes ?? [],
+  variants: l.variantes ?? [],
+  images: l.imagens ?? [],
+  image: l.imagens?.[0] ?? '',
+  // O preço de venda é recalculado com o markup ao resolver o catálogo.
+  price: Number(l.custo),
+  custo: Number(l.custo),
+  compareAt: null,
+  available: l.disponivel,
+  descriptionHtml: l.descricao_html ?? '',
+});
+
+const paraLinha = (p: Product) => ({
+  handle: p.handle,
+  titulo: p.title,
+  tipo: p.type,
+  fornecedor: p.vendor,
+  tags: p.tags,
+  opcoes: p.options,
+  variantes: p.variants,
+  imagens: p.images,
+  descricao_html: p.descriptionHtml,
+  custo: p.custo ?? p.price,
+  disponivel: p.available,
+});
+
+/** O PostgREST tem teto por requisição; 205 produtos não cabem de uma vez. */
+const LOTE = 100;
+
+export async function carregarProdutos(): Promise<Product[] | null> {
+  if (!supabase) return null;
+
+  const todos: Product[] = [];
+  for (let inicio = 0; ; inicio += 1000) {
+    const { data, error } = await supabase
+      .from('produtos')
+      .select('*')
+      .order('titulo')
+      .range(inicio, inicio + 999);
+
+    if (error) return todos.length ? todos : null;
+    if (!data?.length) break;
+
+    todos.push(...(data as LinhaProduto[]).map(paraProduto));
+    if (data.length < 1000) break;
+  }
+
+  return todos.length ? todos : null;
+}
+
+export async function salvarProdutos(produtos: Product[]): Promise<number> {
+  if (!supabase || produtos.length === 0) return 0;
+
+  let gravados = 0;
+  for (let i = 0; i < produtos.length; i += LOTE) {
+    const lote = produtos.slice(i, i + LOTE).map(paraLinha);
+    const { error } = await supabase.from('produtos').upsert(lote, { onConflict: 'handle' });
+    if (!error) gravados += lote.length;
+  }
+  return gravados;
+}
+
+export async function salvarProduto(produto: Product): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('produtos')
+    .upsert(paraLinha(produto), { onConflict: 'handle' });
+  return !error;
+}
+
+/** Usado pelo olheiro: atualiza custo e disponibilidade sem tocar no resto. */
+export async function atualizarCustoNaNuvem(
+  handle: string,
+  campos: { custo?: number; disponivel?: boolean }
+): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('produtos').update(campos).eq('handle', handle);
+  return !error;
+}
+
+export async function removerProdutoNaNuvem(handle: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('produtos').delete().eq('handle', handle);
+  return !error;
+}
+
+interface LinhaCategoria {
+  handle: string;
+  titulo: string;
+  subtitulo: string;
+  produtos: string[];
+  ordem: number;
+}
+
+export async function carregarCategorias(): Promise<Collection[] | null> {
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from('categorias')
+    .select('*')
+    .eq('oculta', false)
+    .order('ordem');
+
+  if (error || !data?.length) return null;
+
+  return (data as LinhaCategoria[]).map((c) => ({
+    handle: c.handle,
+    title: c.titulo,
+    subtitle: c.subtitulo ?? '',
+    productHandles: c.produtos ?? [],
+  }));
+}
+
+export async function salvarCategorias(categorias: Collection[]): Promise<number> {
+  if (!supabase || categorias.length === 0) return 0;
+
+  const linhas = categorias.map((c, i) => ({
+    handle: c.handle,
+    titulo: c.title,
+    subtitulo: c.subtitle,
+    produtos: c.productHandles,
+    ordem: i,
+  }));
+
+  const { error } = await supabase.from('categorias').upsert(linhas, { onConflict: 'handle' });
+  return error ? 0 : linhas.length;
+}
 
 export { semNuvem };
