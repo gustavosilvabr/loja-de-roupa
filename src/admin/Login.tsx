@@ -7,6 +7,7 @@ import {
   recuperarSenha,
 } from './store/nuvem';
 import { Button, Card, Field, Input } from './ui';
+import { nuvemAtiva } from '../lib/supabase';
 
 type Modo = 'entrar' | 'criar' | 'recuperar' | 'nova-senha';
 
@@ -96,12 +97,23 @@ export function Login({ primeiroAcesso }: { primeiroAcesso: boolean }) {
     <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
       <div className="w-full max-w-[400px]">
         <div className="mb-6 text-center">
-          <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-[18px] font-bold text-white">
-            X
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-[15px] font-bold text-white">
+            GP
           </span>
           <h1 className="mt-3 text-[22px] font-bold text-slate-900">{t.titulo}</h1>
           <p className="mt-1 text-[13.5px] text-slate-500">{t.sub}</p>
         </div>
+
+        {!nuvemAtiva && (
+          <p
+            role="alert"
+            className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-[13px] leading-relaxed text-amber-800"
+          >
+            A nuvem não está configurada neste site. Configure as variáveis{' '}
+            <strong>VITE_SUPABASE_URL</strong> e <strong>VITE_SUPABASE_KEY</strong> (chave
+            pública/anon, nunca a secreta) na hospedagem e publique de novo para liberar o login.
+          </p>
+        )}
 
         <Card>
           <form onSubmit={enviar} className="space-y-4">

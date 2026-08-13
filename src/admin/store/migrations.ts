@@ -7,7 +7,7 @@ import type { StoreSettings } from '../types';
  * sido gravado no navegador do lojista, incremente aqui e adicione o passo
  * correspondente em MIGRACOES — assim a correção chega sem apagar o resto.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 const KEY = 'schemaVersion';
 
@@ -23,7 +23,27 @@ const MIGRACOES: Record<number, Migracao> = {
       return correto ? { ...time, crest: correto.crest, name: correto.name } : time;
     }),
   }),
+  // v3 — a loja foi renomeada de Xing Sun para GP ESPORTES. Quem já tinha
+  // configurações salvas continuava vendo o nome antigo no título e no rodapé.
+  3: (s) => trocarNome(s) as StoreSettings,
 };
+
+/** Troca o nome antigo por GP ESPORTES em qualquer texto das configurações. */
+function trocarNome(valor: unknown): unknown {
+  if (typeof valor === 'string') {
+    return valor
+      .replace(/XING\s*SUN/g, 'GP ESPORTES')
+      .replace(/Xing\s*Sun/g, 'GP ESPORTES')
+      .replace(/xing\s*sun(?!:)/g, 'GP ESPORTES');
+  }
+  if (Array.isArray(valor)) return valor.map(trocarNome);
+  if (valor && typeof valor === 'object') {
+    return Object.fromEntries(
+      Object.entries(valor as Record<string, unknown>).map(([k, v]) => [k, trocarNome(v)])
+    );
+  }
+  return valor;
+}
 
 export function migrar(settings: StoreSettings): StoreSettings {
   const atual = load<number>(KEY, 0);
