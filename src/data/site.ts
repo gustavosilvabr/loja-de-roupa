@@ -2,7 +2,7 @@
 // Tudo aqui é texto/imagem — altere à vontade sem mexer no código dos componentes.
 
 export const SITE = {
-  name: 'XING SUN',
+  name: 'GP ESPORTES',
   phone: '11 98960-9774',
   email: 'xingsunoficial@gmail.com',
   instagram: 'https://www.instagram.com/serg_nspu',
@@ -59,7 +59,7 @@ export const HERO_SLIDES: Slide[] = [
     desktop: `${CDN}/files/BANNER-4-DESK_3.png`,
     mobile: `${CDN}/files/BANNER-4-MOB_5.png`,
     to: '/colecoes/promocao-nacional',
-    alt: 'Promoção nacional XING SUN',
+    alt: 'Promoção nacional GP ESPORTES',
   },
 ];
 

@@ -160,15 +160,10 @@ export function Footer() {
       <div className="bg-brand py-3 text-center">
         <p className="text-[12px] font-semibold text-white">
           Copyright © {new Date().getFullYear()} {brand.name}. Todos os direitos reservados.
-          {/* Atalho só em desenvolvimento — o cliente final nunca vê. */}
-          {import.meta.env.DEV && (
-            <>
-              {' · '}
-              <Link to="/admin" className="underline opacity-80 hover:opacity-100">
-                Painel
-              </Link>
-            </>
-          )}
+          {' · '}
+          <Link to="/admin" className="underline opacity-80 hover:opacity-100">
+            Painel Admin
+          </Link>
         </p>
       </div>
     </footer>

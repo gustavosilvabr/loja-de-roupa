@@ -69,7 +69,7 @@ export default function Seo() {
               <Input
                 value={seo.title}
                 onChange={(e) => setSeo({ title: e.target.value })}
-                placeholder="XING SUN - Atacado de Camisas de Futebol"
+                placeholder="GP ESPORTES - Atacado de Camisas de Futebol"
               />
             </Field>
 

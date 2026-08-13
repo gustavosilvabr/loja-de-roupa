@@ -69,7 +69,7 @@ function criarProduto(
     handle,
     title: patch.title ?? 'Novo produto',
     type: patch.type ?? 'Camisa',
-    vendor: 'XING SUN',
+    vendor: 'GP ESPORTES',
     tags: patch.tags ?? [],
     options: [],
     variants: [

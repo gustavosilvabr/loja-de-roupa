@@ -121,7 +121,7 @@ export default function Marca() {
               <Input
                 value={brand.name}
                 onChange={(e) => setBrand({ name: e.target.value })}
-                placeholder="XING SUN"
+                placeholder="GP ESPORTES"
               />
             </Field>
 

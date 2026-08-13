@@ -134,7 +134,7 @@ describe('Marca — WhatsApp', () => {
     const user = userEvent.setup();
     renderSimples(<Marca />);
 
-    const nome = screen.getByDisplayValue('XING SUN');
+    const nome = screen.getByDisplayValue('GP ESPORTES');
     await user.clear(nome);
     await user.type(nome, 'LOJA TESTE');
 

@@ -15,7 +15,7 @@ import type { Avaliacao, CatalogOverrides } from '../types';
    ============================================================ */
 
 const NOMES = [
-  'Cliente verificado', 'Comprador anônimo', 'Cliente XING SUN',
+  'Cliente verificado', 'Comprador anônimo', 'Cliente GP ESPORTES',
   'Comprador verificado', 'Cliente da loja',
 ];
 

@@ -1,4 +1,4 @@
-// GERADO AUTOMATICAMENTE a partir do catálogo real da XING SUN.
+// GERADO AUTOMATICAMENTE a partir do catálogo real da GP ESPORTES.
 // Categorias organizadas por scripts/organizar-categorias.mjs
 /* eslint-disable */
 import type { Collection } from '../types';

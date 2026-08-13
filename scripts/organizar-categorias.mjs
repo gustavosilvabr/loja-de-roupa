@@ -221,7 +221,7 @@ function main() {
   }
 
   const saida =
-    `// GERADO AUTOMATICAMENTE a partir do catálogo real da XING SUN.\n` +
+    `// GERADO AUTOMATICAMENTE a partir do catálogo real da GP ESPORTES.\n` +
     `// Categorias organizadas por scripts/organizar-categorias.mjs\n` +
     `/* eslint-disable */\n` +
     `import type { Collection } from '../types';\n\n` +

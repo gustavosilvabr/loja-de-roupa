@@ -11,7 +11,7 @@ const base: Product = {
   handle: 'camisa-teste',
   title: 'Camisa Teste I 26/27',
   type: 'Camisa',
-  vendor: 'XING SUN',
+  vendor: 'GP ESPORTES',
   tags: [],
   options: [],
   variants: [

@@ -5,7 +5,7 @@ const CDN = 'https://xingestoque.com/cdn/shop';
 /** Estado inicial do painel — espelha a loja como ela está hoje. */
 export const DEFAULT_SETTINGS: StoreSettings = {
   brand: {
-    name: 'XING SUN',
+    name: 'GP ESPORTES',
     tagline: 'Atacado de Camisas de Futebol | Pronta Entrega',
     logoUrl: `${CDN}/files/logo-8295108138068651999-1782329577-53f8d12a9955e1e2511ee458b17b61bb1782329577-480-0.webp`,
     logoMode: 'texto',
@@ -75,9 +75,9 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   },
 
   seo: {
-    title: 'XING SUN - Atacado de Camisas de Futebol | Pronta Entrega',
+    title: 'GP ESPORTES - CAMISAS ESPORTIVAS',
     description:
-      'Camisas de futebol no atacado, com modelos nacionais, internacionais, retrô, femininos e infantis. Confira o catálogo da XING SUN.',
+      'Camisas de futebol no atacado, com modelos nacionais, internacionais, retrô, femininos e infantis. Confira o catálogo da GP ESPORTES.',
     keywords: 'camisa de futebol, atacado, retrô, camisa time, pronta entrega',
     ogImage: `${CDN}/files/BANNER-1-DESK_11.png`,
     robots: 'index,follow',
@@ -116,7 +116,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
     {
       slug: 'quem-somos',
       title: 'Quem Somos',
-      body: 'A XING SUN nasceu para levar o manto do seu time até você sem intermediário e sem espera. Trabalhamos com atacado de camisas de futebol nacionais, internacionais, retrô, femininas e infantis.\n\nTodo o nosso estoque já está no Brasil. Isso significa expedição em até 24 horas úteis e entrega em poucos dias.',
+      body: 'A GP ESPORTES nasceu para levar o manto do seu time até você sem intermediário e sem espera. Trabalhamos com atacado de camisas de futebol nacionais, internacionais, retrô, femininas e infantis.\n\nTodo o nosso estoque já está no Brasil. Isso significa expedição em até 24 horas úteis e entrega em poucos dias.',
     },
     {
       slug: 'contato',

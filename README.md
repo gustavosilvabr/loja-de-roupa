@@ -1,4 +1,4 @@
-# XING SUN — loja em React
+# GP ESPORTES — loja em React
 
 Réplica da loja `xingestoque.com` em React + TypeScript + Vite + Tailwind + GSAP,
 feita para rodar sem Shopify.

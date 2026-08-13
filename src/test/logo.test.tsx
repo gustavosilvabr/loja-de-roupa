@@ -13,16 +13,16 @@ function comMarca(brand: Partial<StoreSettings['brand']>) {
 
 describe('logo da loja', () => {
   it('sem arquivo enviado, mostra o nome em texto', () => {
-    comMarca({ name: 'XING SUN', logoMode: 'texto', logoUrl: '' });
+    comMarca({ name: 'GP ESPORTES', logoMode: 'texto', logoUrl: '' });
     renderSimples(<Logo />);
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/XING SUN — página inicial/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/GP ESPORTES — página inicial/i)).toBeInTheDocument();
   });
 
   it('com arquivo enviado, o nome em texto some e a imagem aparece', () => {
     comMarca({
-      name: 'XING SUN',
+      name: 'GP ESPORTES',
       logoMode: 'imagem',
       logoUrl: 'https://exemplo.com/minha-logo.png',
     });
@@ -30,7 +30,7 @@ describe('logo da loja', () => {
 
     const imagem = screen.getByRole('img');
     expect(imagem).toHaveAttribute('src', 'https://exemplo.com/minha-logo.png');
-    expect(imagem).toHaveAttribute('alt', 'XING SUN');
+    expect(imagem).toHaveAttribute('alt', 'GP ESPORTES');
 
     // O bloco colorido da letra só existe na versão em texto.
     expect(document.querySelector('.bg-brand')).not.toBeInTheDocument();
@@ -38,7 +38,7 @@ describe('logo da loja', () => {
 
   it('resolve a logo enviada do computador (referência "local:")', () => {
     registrarUrl('local:img_logo', 'blob:logo-de-teste');
-    comMarca({ name: 'XING SUN', logoMode: 'imagem', logoUrl: 'local:img_logo' });
+    comMarca({ name: 'GP ESPORTES', logoMode: 'imagem', logoUrl: 'local:img_logo' });
 
     renderSimples(<Logo />);
 
@@ -49,7 +49,7 @@ describe('logo da loja', () => {
 
   it('se o arquivo não carregar, o nome em texto volta', () => {
     comMarca({
-      name: 'XING SUN',
+      name: 'GP ESPORTES',
       logoMode: 'imagem',
       logoUrl: 'https://exemplo.com/quebrada.png',
     });
@@ -58,11 +58,11 @@ describe('logo da loja', () => {
     fireEvent.error(screen.getByRole('img'));
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/XING SUN — página inicial/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/GP ESPORTES — página inicial/i)).toBeInTheDocument();
   });
 
   it('modo imagem sem arquivo continua mostrando o texto', () => {
-    comMarca({ name: 'XING SUN', logoMode: 'imagem', logoUrl: '' });
+    comMarca({ name: 'GP ESPORTES', logoMode: 'imagem', logoUrl: '' });
     renderSimples(<Logo />);
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('logo da loja', () => {
 describe('tamanho da logo', () => {
   it('a imagem usa a altura escolhida', () => {
     comMarca({
-      name: 'XING SUN',
+      name: 'GP ESPORTES',
       logoMode: 'imagem',
       logoUrl: 'https://exemplo.com/logo.png',
       logoAltura: 56,
@@ -83,7 +83,7 @@ describe('tamanho da logo', () => {
   });
 
   it('o texto acompanha a altura, para o cabeçalho não pular de tamanho', () => {
-    comMarca({ name: 'XING SUN', logoMode: 'texto', logoAltura: 50 });
+    comMarca({ name: 'GP ESPORTES', logoMode: 'texto', logoAltura: 50 });
     renderSimples(<Logo />);
 
     // 50 * 0,62 arredondado
@@ -91,7 +91,7 @@ describe('tamanho da logo', () => {
   });
 
   it('sem altura definida, usa o padrão', () => {
-    comMarca({ name: 'XING SUN', logoMode: 'imagem', logoUrl: 'https://exemplo.com/l.png' });
+    comMarca({ name: 'GP ESPORTES', logoMode: 'imagem', logoUrl: 'https://exemplo.com/l.png' });
     renderSimples(<Logo />);
 
     expect(screen.getByRole('img')).toHaveStyle({ height: '36px' });
@@ -105,7 +105,7 @@ describe('posição da logo no cabeçalho', () => {
 
   it('celular e computador têm posições independentes', () => {
     comMarca({
-      name: 'XING SUN',
+      name: 'GP ESPORTES',
       logoAlinhamentoMobile: 'centro',
       logoAlinhamento: 'esquerda',
     });
@@ -122,7 +122,7 @@ describe('posição da logo no cabeçalho', () => {
 
   it('aceita a combinação inversa', () => {
     comMarca({
-      name: 'XING SUN',
+      name: 'GP ESPORTES',
       logoAlinhamentoMobile: 'esquerda',
       logoAlinhamento: 'centro',
     });
@@ -135,14 +135,14 @@ describe('posição da logo no cabeçalho', () => {
   });
 
   it('à direita, a logo encosta nos ícones', () => {
-    comMarca({ name: 'XING SUN', logoAlinhamento: 'direita' });
+    comMarca({ name: 'GP ESPORTES', logoAlinhamento: 'direita' });
     const { container } = renderSimples(<Header />);
 
     expect(celulaDaLogo(container)).toContain('lg:justify-end');
   });
 
   it('sem configuração, usa centro no celular e esquerda no computador', () => {
-    comMarca({ name: 'XING SUN' });
+    comMarca({ name: 'GP ESPORTES' });
     const { container } = renderSimples(<Header />);
     const classes = celulaDaLogo(container);
 
@@ -151,7 +151,7 @@ describe('posição da logo no cabeçalho', () => {
   });
 
   it('a barra do cabeçalho tem uma única logo', () => {
-    comMarca({ name: 'XING SUN', logoAlinhamentoMobile: 'centro', logoAlinhamento: 'direita' });
+    comMarca({ name: 'GP ESPORTES', logoAlinhamentoMobile: 'centro', logoAlinhamento: 'direita' });
     const { container } = renderSimples(<Header />);
 
     // Duplicar a logo para posicionar em cada tela faria o leitor de tela
@@ -164,7 +164,7 @@ describe('posição da logo no cabeçalho', () => {
   it('o menu de navegação continua presente em qualquer posição', () => {
     for (const posicao of ['esquerda', 'centro', 'direita'] as const) {
       localStorage.clear();
-      comMarca({ name: 'XING SUN', logoAlinhamento: posicao });
+      comMarca({ name: 'GP ESPORTES', logoAlinhamento: posicao });
       const { unmount } = renderSimples(<Header />);
 
       expect(screen.getByRole('navigation', { name: /navegação principal/i })).toBeInTheDocument();
@@ -178,21 +178,21 @@ describe('espaçamento da logo', () => {
     container.querySelector('a[aria-label*="página inicial"]')?.parentElement;
 
   it('aplica o respiro escolhido', () => {
-    comMarca({ name: 'XING SUN', logoEspacamento: 20 });
+    comMarca({ name: 'GP ESPORTES', logoEspacamento: 20 });
     const { container } = renderSimples(<Header />);
 
     expect(celula(container)).toHaveStyle({ padding: '20px' });
   });
 
   it('sem configuração, usa o padrão', () => {
-    comMarca({ name: 'XING SUN' });
+    comMarca({ name: 'GP ESPORTES' });
     const { container } = renderSimples(<Header />);
 
     expect(celula(container)).toHaveStyle({ padding: '8px' });
   });
 
   it('aceita zero quando o lojista quer a logo colada', () => {
-    comMarca({ name: 'XING SUN', logoEspacamento: 0 });
+    comMarca({ name: 'GP ESPORTES', logoEspacamento: 0 });
     const { container } = renderSimples(<Header />);
 
     expect(celula(container)).toHaveStyle({ padding: '0px' });
